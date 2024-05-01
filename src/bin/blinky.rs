@@ -7,8 +7,6 @@ use embassy_time::{Duration, Ticker};
 use panic_probe as _;
 
 fn clock_config() -> embassy_stm32::Config {
-    use embassy_stm32::rcc::*;
-
     let mut config = embassy_stm32::Config::default();
 
     // Configure to use the high speed internal oscillator (HSI).
