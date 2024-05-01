@@ -5,7 +5,7 @@ use embassy_executor::Spawner;
 use panic_probe as _;
 
 fn clock_config() -> embassy_stm32::Config {
-    let mut config = embassy_stm32::Config::default();
+    let config = embassy_stm32::Config::default();
 
     config
 }

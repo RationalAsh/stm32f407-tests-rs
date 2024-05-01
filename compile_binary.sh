@@ -16,3 +16,6 @@ cargo objdump --bin ${BINARY_NAME} --release -- -d --no-show-raw-insn --print-im
 # Then create the binary file.
 # arm-none-eabi-objcopy -O binary target/thumbv7em-none-eabihf/release/blinky firmware.bin
 cargo objcopy --release -- -O binary firmware/${BINARY_NAME}.bin
+
+# Run cargo size to get the size of the binary.
+cargo size --bin ${BINARY_NAME} --release
