@@ -38,3 +38,4 @@ embassy-sync = { version = "0.5.0" }
 cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
 cortex-m-rt = "0.7"
 panic-probe = { version = "0.3" }
+libm = "0.2.8"

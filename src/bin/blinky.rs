@@ -4,6 +4,7 @@
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_time::{Duration, Ticker};
+use libm::sinf;
 use panic_probe as _;
 
 fn clock_config() -> embassy_stm32::Config {
@@ -30,13 +31,23 @@ async fn main(_spawner: Spawner) {
 
     // Create a new Ticker for the delay
     let mut ticker = Ticker::every(Duration::from_millis(100));
+    let mut ctr: f32 = 0.0;
+    let mut sin: f32 = 0.0;
 
     loop {
         // Wait for the ticker to expire
         ticker.next().await;
 
+        ctr += 0.1f32;
+        ctr *= 0.1f32;
+        ctr /= 0.1f32;
+
+        // sin = sinf(ctr as f32) * 100.0f32;
+
         // Toggle the leds
-        green_led.toggle();
+        if (sin > 50.0f32) {
+            green_led.toggle();
+        }
         red_led.toggle();
         green_led2.toggle();
         orange_led.toggle();
