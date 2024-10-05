@@ -1,57 +1,85 @@
-#![no_std]
+//! examples/common.rs
+
 #![no_main]
+#![no_std]
+#![deny(warnings)]
+#![deny(unsafe_code)]
+#![deny(missing_docs)]
 
-use embassy_executor::Spawner;
-use embassy_stm32::gpio::{Level, Output, Speed};
-use embassy_time::{Duration, Ticker};
-use libm::sinf;
-use panic_probe as _;
+use panic_semihosting as _;
 
-fn clock_config() -> embassy_stm32::Config {
-    let mut config = embassy_stm32::Config::default();
+#[rtic::app(device = lm3s6965, dispatchers = [UART0, UART1])]
+mod app {
 
-    // Configure to use the high speed internal oscillator (HSI).
-    config.rcc.hsi = true;
+    #[shared]
+    struct Shared {}
 
-    config
-}
+    #[local]
+    struct Local {
+        local_to_foo: i64,
+        local_to_bar: i64,
+        local_to_idle: i64,
+    }
 
-#[embassy_executor::main]
-async fn main(_spawner: Spawner) {
-    // Initialize embassy
-    let peripherals = embassy_stm32::init(clock_config());
+    // `#[init]` cannot access locals from the `#[local]` struct as they are initialized here.
+    #[init]
+    fn init(_: init::Context) -> (Shared, Local) {
+        foo::spawn().unwrap();
+        bar::spawn().unwrap();
 
-    // Create a new output pin - PA9 is the green led on the Discovery board
-    let mut green_led = Output::new(peripherals.PA9, Level::High, Speed::VeryHigh);
-    let mut red_led = Output::new(peripherals.PD5, Level::High, Speed::VeryHigh);
-    let mut green_led2 = Output::new(peripherals.PD12, Level::High, Speed::VeryHigh);
-    let mut orange_led = Output::new(peripherals.PD13, Level::High, Speed::VeryHigh);
-    let mut red_led2 = Output::new(peripherals.PD14, Level::High, Speed::VeryHigh);
-    let mut blue_led = Output::new(peripherals.PD15, Level::High, Speed::VeryHigh);
+        (
+            Shared {},
+            // initial values for the `#[local]` resources
+            Local {
+                local_to_foo: 0,
+                local_to_bar: 0,
+                local_to_idle: 0,
+            },
+        )
+    }
 
-    // Create a new Ticker for the delay
-    let mut ticker = Ticker::every(Duration::from_millis(100));
-    let mut ctr: f32 = 0.0;
-    let mut sin: f32 = 0.0;
+    // `local_to_idle` can only be accessed from this context
+    #[idle(local = [local_to_idle])]
+    fn idle(cx: idle::Context) -> ! {
+        let local_to_idle = cx.local.local_to_idle;
+        *local_to_idle += 1;
 
-    loop {
-        // Wait for the ticker to expire
-        ticker.next().await;
+        // hprintln!("idle: local_to_idle = {}", local_to_idle);
 
-        ctr += 0.1f32;
-        ctr *= 0.1f32;
-        ctr /= 0.1f32;
+        debug::exit(debug::EXIT_SUCCESS); // Exit QEMU simulator
 
-        // sin = sinf(ctr as f32) * 100.0f32;
+        // error: no `local_to_foo` field in `idle::LocalResources`
+        // _cx.local.local_to_foo += 1;
 
-        // Toggle the leds
-        if (sin > 50.0f32) {
-            green_led.toggle();
+        // error: no `local_to_bar` field in `idle::LocalResources`
+        // _cx.local.local_to_bar += 1;
+
+        loop {
+            cortex_m::asm::nop();
         }
-        red_led.toggle();
-        green_led2.toggle();
-        orange_led.toggle();
-        red_led2.toggle();
-        blue_led.toggle();
+    }
+
+    // `local_to_foo` can only be accessed from this context
+    #[task(local = [local_to_foo], priority = 1)]
+    async fn foo(cx: foo::Context) {
+        let local_to_foo = cx.local.local_to_foo;
+        *local_to_foo += 1;
+
+        // error: no `local_to_bar` field in `foo::LocalResources`
+        // cx.local.local_to_bar += 1;
+
+        // hprintln!("foo: local_to_foo = {}", local_to_foo);
+    }
+
+    // `local_to_bar` can only be accessed from this context
+    #[task(local = [local_to_bar], priority = 1)]
+    async fn bar(cx: bar::Context) {
+        let local_to_bar = cx.local.local_to_bar;
+        *local_to_bar += 1;
+
+        // error: no `local_to_foo` field in `bar::LocalResources`
+        // cx.local.local_to_foo += 1;
+
+        // hprintln!("bar: local_to_bar = {}", local_to_bar);
     }
 }
