@@ -20,7 +20,7 @@ opt-level = "s"   # Optimize for size
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-stm32f4xx-hal = { version = "0.8.3", features = ["stm32f407"] }
+stm32f4xx-hal = { version = "0.20.0", features = ["stm32f407"] }
 cortex-m = { version = "0.7.3", features = ["critical-section-single-core"] }
 cortex-m-rt = "0.7"
 panic-probe = { version = "0.3" }
