@@ -31,7 +31,7 @@ async fn main(_spawner: Spawner) {
     let mut blue_led = Output::new(peripherals.PD15, Level::High, Speed::VeryHigh);
 
     // Create a new Ticker for the delay
-    let mut ticker = Ticker::every(Duration::from_millis(100));
+    let mut ticker = Ticker::every(Duration::from_millis(25));
 
     loop {
         // Wait for the ticker to expire
